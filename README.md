@@ -4,7 +4,7 @@ This repository contains a module of an asset management app which I developed f
 
 This Module demonstrates ability to add, edit, view assets in a grid and a map view.
 
-Due to privacy, I redeveloped this app for the purpuse of this assignment and created it in a whole new private repository. It utilizes Kendo UI React Framework with a trial license key and Google firebase for authentication and NOSQL storage.
+Due to privacy, I redeveloped this app for the purpuse of this assignment and created it in a whole new private repository. It utilizes Kendo UI React Framework with a trial license key and Google firebase for authentication and NOSQL Firebase storage.
 
 In this repository there is a quick preview demo of the app running locally on my machine.
 
