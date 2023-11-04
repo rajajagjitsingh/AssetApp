@@ -61,7 +61,7 @@ Feedback and Contributions
 We welcome feedback, bug reports, and contributions from the community. If you find any issues or have ideas for improvement, please open an issue or create a pull request.
 
 Author
-Jagjit Singh - Your GitHub Profile
+Jagjit Singh  
 
 Acknowledgments
 Special thanks to KendoReact and Google Firebase for their amazing tools and services.
