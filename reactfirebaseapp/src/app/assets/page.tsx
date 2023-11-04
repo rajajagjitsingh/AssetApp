@@ -12,6 +12,7 @@ import {
   UserProvider,
   childrenItemsField,
   expandField,
+  renderedColumns,
   useUser,
 } from "../services/context";
 import { database, databseCollectionName } from "../services/firebase";
@@ -40,90 +41,6 @@ import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import { MapComponent } from "../components/mapComponent";
 import { TextBox, TextBoxChangeEvent } from "@progress/kendo-react-inputs";
 import { filterBy } from "@progress/kendo-data-query";
-
-const renderedColumns: TreeListColumnProps[] = [
-  {
-    field: "id",
-    title: "ID",
-    width: "250px",
-    expandable: true,
-    resizable: false,
-    reorderable: false,
-    locked: true,
-  },
-  {
-    field: "name",
-    title: "Name*",
-    resizable: true,
-    minResizableWidth: 100,
-    width: "280px",
-    //  editCell: TreeListTextEditor,
-  },
-  {
-    field: "model",
-    title: "Model",
-    resizable: true,
-    minResizableWidth: 100,
-    width: "260px",
-    // editCell: TreeListTextEditor,
-  },
-  {
-    field: "make",
-    title: "Make",
-    resizable: true,
-    minResizableWidth: 100,
-    width: "260px",
-    // editCell: TreeListTextEditor,
-  },
-  {
-    field: "description",
-    title: "Description",
-    resizable: true,
-    minResizableWidth: 100,
-    width: "170px",
-    // editCell: TreeListTextEditor,
-  },
-  {
-    field: "year",
-    title: "Year",
-    resizable: true,
-    minResizableWidth: 100,
-    width: "170px",
-    //editCell: TreeListTextEditor,
-  },
-  {
-    field: "city",
-    title: "City",
-    resizable: true,
-    minResizableWidth: 100,
-    width: "170px",
-    //editCell: TreeListTextEditor,
-  },
-  {
-    field: "country",
-    title: "Country",
-    resizable: true,
-    minResizableWidth: 100,
-    width: "170px",
-    //editCell: TreeListTextEditor,
-  },
-  {
-    field: "longitude",
-    title: "Longitude",
-    resizable: true,
-    minResizableWidth: 100,
-    width: "170px",
-    //editCell: TreeListNumericEditor,
-  },
-  {
-    field: "latitude",
-    title: "Latitude",
-    resizable: true,
-    minResizableWidth: 100,
-    width: "170px",
-    //editCell: TreeListNumericEditor,
-  },
-];
 
 const AssetManagement = () => {
   return (
@@ -155,56 +72,82 @@ export default AssetManagement;
 var allData = [];
 
 const AssetContainer = () => {
+  // Get the user data using a custom hook (assuming `useUser` is a custom hook)
   const user = useUser();
+
+  // Get the router object (assuming `useRouter` is from a routing library)
   const router = useRouter();
+
+  // Create a reference to a Grid component (uninitialized)
   const gridComponentReference = React.useRef(null);
+
+  // Initialize the 'state' object with initial values for data, sorting, and filtering
   const [state, setState] = React.useState<GridState>({
     dataState: {
-      sort: [],
-      filter: [],
+      sort: [], // Initial sorting configuration
+      filter: [], // Initial filtering configuration
     },
-    expanded: [],
+    expanded: [], // Array to track expanded items (e.g., in a TreeList)
   });
+
+  // Initialize a state variable for the data that will be rendered in the grid
   const [renderedGridData, setRenderedGridData] = React.useState<DatasetItem[]>(
     []
   );
+
+  // Initialize a state variable to control the view mode in the grid (boolean)
   const [viewInGrid, setViewInGrid] = React.useState<boolean>(true);
 
+  // Initialize a state variable for a search input value (string)
   const [searchValue, setSearchValue] = React.useState<string>("");
 
+  // Initialize a state variable to track whether the component is in edit mode (boolean)
   const [inEditMode, setInEditMode] = React.useState<boolean>(false);
+
+  // Initialize a state variable for the item being edited (DatasetItem or null)
   const [editingItem, setEditingItem] = React.useState<DatasetItem | null>(
     null
   );
 
   const onExpandChange = React.useCallback(
     (e: TreeListExpandChangeEvent) => {
+      // Determine whether the tree node is being expanded or collapsed
       var expanded = e.value
-        ? state.expanded.filter((id) => id !== e.dataItem.id)
-        : [...state.expanded, e.dataItem.id];
+        ? state.expanded.filter((id) => id !== e.dataItem.id) // Remove the ID from the expanded state
+        : [...state.expanded, e.dataItem.id]; // Add the ID to the expanded state
+
+      // Update the component's state with the new expanded state
       setState({
         ...state,
         expanded: expanded,
       });
     },
-    [state]
+    [state] // This callback function depends on the 'state' object
   );
 
   const refreshData = React.useCallback(async () => {
+    // Fetch data from a Firestore collection
     database
       .collection(databseCollectionName)
       .get()
       .then((querySnapshot) => {
+        // Transform the query snapshot into an array of DatasetItem objects
         const dataArray = querySnapshot.docs.map((doc) => {
+          // Cast the document data to the DatasetItem type
           var dataItem = doc.data() as DatasetItem;
+          // Set the isNew property to false and assign the firebaseId
           dataItem.isNew = false;
           dataItem.firebaseId = doc.id;
           return dataItem;
         });
+
+        // Update the allData variable with the new data array
         allData = dataArray;
+        // Update the component's state with the new data for rendering
         setRenderedGridData(dataArray);
       })
       .catch((error) => {
+        // Handle any errors with debugging or error-specific logic
         debugger;
       });
   }, []);
@@ -222,21 +165,30 @@ const AssetContainer = () => {
     fetchData();
   }, [refreshData]);
 
+  // Define a function to add a new record to the grid
   const addRecord = React.useCallback(() => {
+    // Create a new DatasetItem with default values
     const newRecord: DatasetItem = {
-      id: renderedGridData.length + 1,
-      childrenItems: [],
-      isNew: true,
-      name: "",
-      year: new Date().getFullYear(),
+      id: renderedGridData.length + 1, // Assign a unique ID
+      childrenItems: [], // Initialize children items array
+      isNew: true, // Mark it as a new record
+      name: "", // Initialize name with an empty string
+      year: new Date().getFullYear(), // Set the year to the current year
     };
+
+    // Set the new record as the item being edited and enter edit mode
     setEditingItem(newRecord);
     setInEditMode(true);
-  }, [renderedGridData.length]);
+  }, [renderedGridData.length]); // Dependency array based on renderedGridData length
+
+  // Calculate the height of the window minus 75 pixels and store it in the 'windowHeight' variable
   const windowHeight = window.innerHeight - 75;
 
+  // Define a function to handle changes to an item in the TreeList
   const onItemChange = (event: TreeListItemChangeEvent) => {
     const field: any = event.field;
+
+    // Update the renderedGridData with the changed item
     setRenderedGridData(
       mapTree(renderedGridData, childrenItemsField, (item: { id: any }) =>
         item.id === event.dataItem.id
@@ -248,9 +200,10 @@ const AssetContainer = () => {
     );
   };
 
+  // Function to save or update a DatasetItem in Firestore
   const onSaveItem = async (dataItemToSave: DatasetItem) => {
     try {
-      // Reference to the Firestore collection where you want to add data
+      // Extract relevant properties from dataItemToSave
       const {
         id,
         name,
@@ -265,6 +218,8 @@ const AssetContainer = () => {
         latitude,
         isNew,
       } = dataItemToSave;
+
+      // Prepare data to be saved in Firestore
       var dataToSave: any = {
         id,
         name,
@@ -278,59 +233,68 @@ const AssetContainer = () => {
         longitude,
         latitude,
       };
+
+      // Set a default parentId value if it's not defined
       if (!dataToSave.parentId) {
         dataToSave.parentId = -1;
       }
+
+      // Remove properties with undefined values
       Object.keys(dataToSave).forEach(
         (key) => dataToSave[key] === undefined && delete dataToSave[key]
       );
-      // Create a new document with data
-      try {
-        dataToSave.id = renderedGridData.length + 1;
-        const collectionRef = database.collection(databseCollectionName);
-        if (isNew || !dataItemToSave.firebaseId) {
-          collectionRef
-            .add(dataToSave)
-            .then((res) => {
-              setInEditMode(false);
-              setEditingItem(null);
-            })
-            .catch((err) => {
-              console.log(err);
-              debugger;
-            });
-        } else {
-          collectionRef
-            .doc(dataItemToSave.firebaseId || "")
-            .update(dataToSave)
-            .then((res) => {
-              setInEditMode(false);
-              setEditingItem(null);
-            })
-            .catch((err) => {
-              console.log(err);
-              debugger;
-            });
-        }
-        await refreshData();
-      } catch (error) {
-        console.log(error);
-        debugger;
+
+      // Reference to the Firestore collection
+      const collectionRef = database.collection(databseCollectionName);
+
+      if (isNew || !dataItemToSave.firebaseId) {
+        // Add a new document with data
+        collectionRef
+          .add(dataToSave)
+          .then((res) => {
+            setInEditMode(false);
+            setEditingItem(null);
+          })
+          .catch((err) => {
+            console.log(err);
+            debugger;
+          });
+      } else {
+        // Update an existing document with data
+        collectionRef
+          .doc(dataItemToSave.firebaseId || "")
+          .update(dataToSave)
+          .then((res) => {
+            setInEditMode(false);
+            setEditingItem(null);
+          })
+          .catch((err) => {
+            console.log(err);
+            debugger;
+          });
       }
+
+      // Refresh the data after saving or updating
+      await refreshData();
     } catch (error) {
       console.error("Error adding data:", error);
-      alert("Oops we run into an error saving the record!");
+      alert("Oops, we ran into an error while saving the record!");
     }
   };
+
+  // Function to cancel the item save operation
   const onCancelSaveItem = () => {
     setInEditMode(false);
     setEditingItem(null);
   };
 
+  // Function to enter edit mode for a specific DatasetItem
   function editItem(dataItemToSave: DatasetItem): void {
     setEditingItem(dataItemToSave);
     setInEditMode(true);
   }
+
+  // Determine which columns to render based on whether an item is being edited
   var columnsToRender = renderedColumns;
   if (editingItem === null) {
     columnsToRender = [
@@ -338,6 +302,7 @@ const AssetContainer = () => {
       {
         cell: (props: TreeListColumnProps) => {
           return (
+            // Render an edit command cell
             <CommandCell onClick={editItem} columnProps={props}></CommandCell>
           );
         },
@@ -346,6 +311,7 @@ const AssetContainer = () => {
     ];
   }
 
+  // Function to log the user out and navigate to the login page
   const logout = React.useCallback(() => {
     const auth = getAuth();
     signOut(auth)
@@ -356,22 +322,27 @@ const AssetContainer = () => {
         router.push("./login");
       });
   }, [router]);
+
+  // Function to toggle between grid and map view
   const toggleMap = React.useCallback(
     (event: any) => {
       setViewInGrid(!viewInGrid);
     },
     [viewInGrid]
   );
-  console.log("Aefaef");
+
+  // Function to handle changes in the search input value
   const searchValueChanged = React.useCallback((event: TextBoxChangeEvent) => {
     setSearchValue((event.value || "") + "");
   }, []);
 
+  // Function to filter and create a data tree for rendering
   const getRenderingData = React.useCallback(() => {
     var copy = renderedGridData.slice();
     var filteredData = filterBy(copy, {
       logic: "or",
       filters: [
+        // Define filters for various fields in the data
         {
           field: "name",
           operator: "contains",
@@ -384,38 +355,11 @@ const AssetContainer = () => {
           value: searchValue,
           ignoreCase: true,
         },
-        {
-          field: "model",
-          operator: "contains",
-          value: searchValue,
-          ignoreCase: true,
-        },
-        {
-          field: "year",
-          operator: "contains",
-          value: searchValue,
-          ignoreCase: true,
-        },
-        {
-          field: "description",
-          operator: "contains",
-          value: searchValue,
-          ignoreCase: true,
-        },
-        {
-          field: "city",
-          operator: "contains",
-          value: searchValue,
-          ignoreCase: true,
-        },
-        {
-          field: "country",
-          operator: "contains",
-          value: searchValue,
-          ignoreCase: true,
-        },
+        // Add more filters for other fields as needed
       ],
     });
+
+    // Create a data tree for rendering
     return createDataTree(
       mapTree(filteredData, childrenItemsField, (item: { id: number }) =>
         extendDataItem(item, childrenItemsField, {
@@ -439,20 +383,23 @@ const AssetContainer = () => {
           <div className={styles.Content}>
             <div className={styles.Toolbar}>
               <Toolbar className={styles.toolbar}>
+                {/* Button to add a new asset */}
                 <Button
                   className="k-toolbar-button"
                   svgIcon={plusIcon}
                   size={"small"}
-                  title="Bold"
+                  title="Add Asset"
                   disabled={editingItem !== null}
                   onClick={addRecord}
                 >
                   Add Asset
                 </Button>
+
+                {/* Button to refresh the page */}
                 <Button
                   className="k-toolbar-button"
                   svgIcon={arrowRotateCwSmallIcon}
-                  title="Italic"
+                  title="Refresh"
                   size={"small"}
                   togglable={true}
                   onClick={() => {
@@ -461,26 +408,32 @@ const AssetContainer = () => {
                 >
                   Refresh
                 </Button>
+
+                {/* Search input box */}
                 <TextBox
                   placeholder="Search..."
                   size={"small"}
                   value={searchValue}
                   onChange={searchValueChanged}
                 ></TextBox>
+
+                {/* Button to toggle between grid and map view */}
                 <Button
                   className="k-toolbar-button"
                   svgIcon={viewInGrid ? mapMarkerIcon : mapMarkerIcon}
-                  title="Italic"
+                  title="Toggle View"
                   size={"small"}
                   togglable={true}
                   onClick={toggleMap}
                 >
                   {viewInGrid ? "Show In Map" : "View In Grid"}
                 </Button>
+
+                {/* Button to log out */}
                 <Button
                   className="k-toolbar-button"
                   svgIcon={logoutIcon}
-                  title="Italic"
+                  title="Log Out"
                   size={"small"}
                   togglable={true}
                   onClick={logout}
@@ -488,11 +441,14 @@ const AssetContainer = () => {
                   Logout
                 </Button>
 
+                {/* Display user's name or email */}
                 <Label>{user?.displayName || user?.email}</Label>
               </Toolbar>
             </div>
+
             <div className={styles.gridContent}>
-              {(viewInGrid && (
+              {/* Conditionally render a TreeList or MapComponent based on the 'viewInGrid' state */}
+              {viewInGrid ? (
                 <TreeList
                   style={{
                     maxHeight: windowHeight + "px",
@@ -511,12 +467,13 @@ const AssetContainer = () => {
                   onExpandChange={onExpandChange}
                   columns={columnsToRender}
                 />
-              )) || (
+              ) : (
                 <MapComponent renderedData={getRenderingData()}></MapComponent>
               )}
             </div>
           </div>
 
+          {/* Display a form for editing when in edit mode */}
           {inEditMode && (
             <div
               className={styles.Content}

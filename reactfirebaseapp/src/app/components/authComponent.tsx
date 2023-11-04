@@ -1,4 +1,4 @@
-"use client";
+// Import necessary dependencies and modules
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../services/firebase";
@@ -10,11 +10,15 @@ import Link from "next/link";
 import { Button } from "@progress/kendo-react-buttons";
 import { useRouter } from "next/navigation";
 import { Loader } from "@progress/kendo-react-indicators";
+
+// Define props for the AuthComponent
 export interface authComponentProps {
   isLogin: boolean;
 }
 
+// AuthComponent is a React component for user authentication
 const AuthComponent = (props: authComponentProps) => {
+  // State variables to manage user input and loading state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -23,54 +27,41 @@ const AuthComponent = (props: authComponentProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const passwordChange = React.useCallback(
-    (event: any) => {
-      setPassword(event.target.value);
-    },
-    [password]
-  );
+  // Event handlers for input changes
+  const passwordChange = React.useCallback((event: any) => {
+    setPassword(event.target.value);
+  }, [password]);
 
-  const emailChange = React.useCallback(
-    (event: any) => {
-      setEmail(event.target.value);
-    },
-    [email]
-  );
-  const firstNameChange = React.useCallback(
-    (event: any) => {
-      setFirstName(event.target.value);
-    },
-    [firstName]
-  );
-  const lastNameChange = React.useCallback(
-    (event: any) => {
-      setLastName(event.target.value);
-    },
-    [lastName]
-  );
+  const emailChange = React.useCallback((event: any) => {
+    setEmail(event.target.value);
+  }, [email]);
 
+  const firstNameChange = React.useCallback((event: any) => {
+    setFirstName(event.target.value);
+  }, [firstName]);
+
+  const lastNameChange = React.useCallback((event: any) => {
+    setLastName(event.target.value);
+  }, [lastName]);
+
+  // Function to handle form submission
   const onSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
     if (props.isLogin) {
+      // Handle sign-in
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-          debugger;
           setIsLoading(false);
-          // Signed in
           const user = userCredential.user;
-          // navigate("/home");
-          console.log(user);
           router.push("./assets");
         })
         .catch((error) => {
           setErrorText(error.message);
           setIsLoading(false);
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.log(errorCode, errorMessage);
         });
     } else {
+      // Handle sign-up
       createUserWithEmailAndPassword(auth, email, password)
         .then(async (userCredential) => {
           const user = userCredential.user;
@@ -80,30 +71,23 @@ const AuthComponent = (props: authComponentProps) => {
             .then((res) => {
               setIsLoading(false);
               router.push("./assets");
-              debugger;
             })
             .catch((error) => {
               setIsLoading(false);
               setErrorText(error.message);
-              const errorCode = error.code;
-              const errorMessage = error.message;
-              console.log(errorCode, errorMessage);
             });
-          // Signed in
-          console.log(user);
-          // navigate("/login");
         })
         .catch((error) => {
           setIsLoading(false);
-          debugger;
           setErrorText(error.message);
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.log(errorCode, errorMessage);
         });
     }
   };
+
+  // Determine the label for the form (SignIn or SignUp)
   const loginLabel = props.isLogin ? "SignIn" : "SignUp";
+
+  // Render the authentication form
   return (
     <section id="authSection">
       <div>
@@ -118,7 +102,6 @@ const AuthComponent = (props: authComponentProps) => {
               <>
                 <div className={styles.formInputDiv}>
                   <Label className={styles.labelItem}>First Name</Label>
-
                   <TextBox
                     type="text"
                     aria-placeholder="First Name"
@@ -131,7 +114,6 @@ const AuthComponent = (props: authComponentProps) => {
                 </div>
                 <div className={styles.formInputDiv}>
                   <Label className={styles.labelItem}>Last Name</Label>
-
                   <TextBox
                     type="text"
                     aria-placeholder="Last Name"
@@ -146,7 +128,6 @@ const AuthComponent = (props: authComponentProps) => {
             )}
             <div className={styles.formInputDiv}>
               <Label className={styles.labelItem}>Email address</Label>
-
               <TextBox
                 type="email"
                 aria-placeholder="Email address"
@@ -157,7 +138,6 @@ const AuthComponent = (props: authComponentProps) => {
                 placeholder="Email address"
               ></TextBox>
             </div>
-
             <div className={styles.formInputDiv}>
               <Label className={styles.labelItem}>Password</Label>
               <TextBox

@@ -19,6 +19,7 @@ import {
 import { ErrorBoundary } from "next/dist/client/components/error-boundary";
 import { extendDataItem } from "@progress/kendo-react-data-tools";
 
+// MapComponent is a React component for displaying a map with markers
 export const MapComponent = (props: MapComponentProps) => {
   const [currentPostion, setCurrentPosition] = React.useState<
     [number, number] | null
@@ -26,12 +27,14 @@ export const MapComponent = (props: MapComponentProps) => {
   const [zoom, setMapZoom] = React.useState<number>(5);
 
   useEffect(() => {
+    // Get the user's current geolocation if not available
     if (!currentPostion) {
       navigator.geolocation.getCurrentPosition((res) => {
         setCurrentPosition([res.coords.latitude, res.coords.longitude]);
       });
     }
   });
+
   const attribution =
     '&copy; <a href="https://osm.org/copyright">OpenStreetMap contributors</a>';
 
@@ -41,6 +44,7 @@ export const MapComponent = (props: MapComponentProps) => {
   };
 
   const renderMarkerTooltip = (props: MarkerTooltipContext) => (
+    // Custom tooltip content for map markers
     <div className={styles.toolTip}>
       <span>{props.dataItem.name}</span>
       <span>{props.dataItem.description}</span>
@@ -50,12 +54,14 @@ export const MapComponent = (props: MapComponentProps) => {
       <span>{props.dataItem.model}</span>
     </div>
   );
+
   const setCurrentZoom = React.useCallback(
     (event: ZoomEndEvent) => {
       setMapZoom(zoom + event.originalEvent.delta);
     },
     [zoom]
   );
+
   const mapPanEnded = React.useCallback((event: PanEndEvent) => {
     setCurrentPosition([event.center.lat, event.center.lng]);
   }, []);

@@ -1,7 +1,5 @@
 import { Toolbar, Button } from "@progress/kendo-react-buttons";
 import {
-  DropDownListChangeEvent,
-  DropDownList,
   ComboBox,
   ComboBoxChangeEvent,
 } from "@progress/kendo-react-dropdowns";
@@ -12,11 +10,14 @@ import React from "react";
 import { FormComponentProps, DatasetItem } from "../services/context";
 import styles from "./../css/page.module.css";
 
+// FormComponent is a React component for editing dataset items
 export const FormComponent = (props: FormComponentProps) => {
+  // State variable for the item being edited
   const [editingItem, setEditingItem] = React.useState<DatasetItem | null>(
     props.editingItem
   );
 
+  // Event handler for input changes
   const onChangeInput = React.useCallback(
     (event: TextBoxChangeEvent) => {
       var item = editingItem;
@@ -31,6 +32,7 @@ export const FormComponent = (props: FormComponentProps) => {
     [editingItem]
   );
 
+  // Event handler for selecting the parent asset
   const onChangeParent = React.useCallback(
     (event: ComboBoxChangeEvent) => {
       var item = editingItem;
@@ -45,16 +47,19 @@ export const FormComponent = (props: FormComponentProps) => {
     [editingItem]
   );
 
+  // Event handler for adding a new record
   const addRecord = React.useCallback(
     (event: any) => {
       event.preventDefault();
       event.stopPropagation();
 
+      // Validate input fields
       if (!editingItem || !editingItem.name || !editingItem.year) {
         alert("Please enter all required information.");
         return;
       }
 
+      // Call the parent component's addRecord function
       if (editingItem) {
         props.addRecord(editingItem);
       }
@@ -62,6 +67,7 @@ export const FormComponent = (props: FormComponentProps) => {
     [editingItem, props]
   );
 
+  // Event handler for canceling the edit
   const onCancelSaveItem = React.useCallback(() => {
     props.onCancelSaveItem();
   }, [props]);
@@ -70,21 +76,23 @@ export const FormComponent = (props: FormComponentProps) => {
     <form>
       <div className={styles.Toolbar} style={{ marginBottom: "10px" }}>
         <Toolbar className={styles.toolbar}>
+          {/* Button for saving the asset */}
           <Button
             className="k-toolbar-button"
             svgIcon={saveIcon}
             size={"small"}
-            title="Bold"
+            title="Save"
             type="button"
             disabled={!editingItem || !editingItem.name || !editingItem.year}
             onClick={addRecord}
           >
             Save Asset
           </Button>
+          {/* Button for canceling the edit */}
           <Button
             className="k-toolbar-button"
             svgIcon={cancelIcon}
-            title="Italic"
+            title="Cancel"
             size={"small"}
             togglable={true}
             onClick={onCancelSaveItem}
@@ -93,7 +101,8 @@ export const FormComponent = (props: FormComponentProps) => {
           </Button>
         </Toolbar>
       </div>
-      {/* <Label className={styles.labelItem}>Asset: {props.editingItem?.id}</Label> */}
+
+      {/* Input fields for asset information */}
       <div className={styles.formInputDiv}>
         <Label className={styles.labelItem}>Name*</Label>
         <TextBox
@@ -135,7 +144,7 @@ export const FormComponent = (props: FormComponentProps) => {
           aria-placeholder="Desciption"
           value={editingItem?.description || ""}
           name="description"
-          placeholder="Desciption"
+          placeholder="Description"
           onChange={onChangeInput}
         ></TextBox>
       </div>
